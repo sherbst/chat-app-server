@@ -42,17 +42,22 @@ io.on('connection', (socket) => {
 
                     socket.on('message', (message) => {
                         console.log(`Message from ${socket.username}: ${message.message}`)
-                        // Is it a command
+                        // Is it a command?
                         var commandPattern = /^\!(.+?)( .*)?$/;
                         if(commandPattern.test(message.message)) {
-                            // Is a command
+                            // It IS a command
                             var commandPortions = commandPattern.exec(message.message);
                             var command = commandPortions[1];
                             var args = commandPortions[2] ? commandPortions[2].trim().split(' ') : [];
-                            commandHandler(command, args);
+
+                            // Sockets of all users in room
+                            var roomSockets = rooms.find(r => r.handle === roomHandle)
+                            .users.map(username => users.find(user => user.username === username).socket);
+
+                            commandHandler(command, args, socket, roomSockets);
                         } else {
                             // Send message
-                            io.to(roomHandle).send({ ...message, type: 'user', from: socket.username });
+                            io.to(roomHandle).send({ ...message, type: 'user', from: socket.username, date: Date.now() });
                         }
                     });
 

@@ -1,5 +1,6 @@
 const io = require('socket.io')();
 const commandHandler = require('./lib/commandHandler');
+const sanitizeHtml = require('sanitize-html');
 
 require('dotenv').config();
 
@@ -38,10 +39,17 @@ io.on('connection', (socket) => {
                 socket.on('joinRoom', (roomHandle) => {
                     joinRoom(roomHandle, socket);
 
-                    socket.send({ message: `Welcome to the chat, ${socket.username}`, date: Date.now() })
+                    socket.send({ message: `Welcome to the chat, ${socket.username}`, type: 'server', parser: 'style', date: Date.now() })
 
                     socket.on('message', (message) => {
                         console.log(`Message from ${socket.username}: ${message.message}`)
+
+                        // Sanitize HTML
+                        message.message = sanitizeHtml(message.message, {
+                            allowedTags: [],
+                            allowedAttributes: {}
+                        });
+
                         // Is it a command?
                         var commandPattern = /^\!(.+?)( .*)?$/;
                         if(commandPattern.test(message.message)) {
@@ -57,7 +65,7 @@ io.on('connection', (socket) => {
                             commandHandler(command, args, socket, roomSockets);
                         } else {
                             // Send message
-                            io.to(roomHandle).send({ ...message, type: 'user', from: socket.username, date: Date.now() });
+                            io.to(roomHandle).send({ ...message, type: 'user', parser: 'style', from: socket.username, date: Date.now() });
                         }
                     });
 

@@ -38,9 +38,7 @@ io.on('connection', (socket) => {
 
                 socket.on('joinRoom', (roomHandle) => {
                     joinRoom(roomHandle, socket);
-
-                    socket.send({ message: `Welcome to the chat, ${socket.username}`, type: 'server', parser: 'style', date: Date.now() })
-
+                    
                     socket.on('message', (message) => {
                         console.log(`Message from ${socket.username}: ${message.message}`)
 
